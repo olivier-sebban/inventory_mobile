@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+::-webkit-scrollbar {
+	@apply transition-all w-2
+}
+
+::-webkit-scrollbar-track {
+	@apply transition-all w-2 shadow-none rounded-none bg-transparent hover:bg-black/10
+}
+ 
+::-webkit-scrollbar-thumb {
+  @apply transition-all bg-black/10 hover:bg-black/50
+}
