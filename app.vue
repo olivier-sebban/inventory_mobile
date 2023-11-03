@@ -1,6 +1,8 @@
 <template>
   <NuxtLoadingIndicator style="opacity: 1 !important" />
-  <NuxtPage />
+  <div class="md:hidden">
+    <NuxtPage />
+  </div>
 </template>
 <script setup>
 // onMounted(() => {

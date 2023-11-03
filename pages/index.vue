@@ -62,7 +62,7 @@
         </div>
         <button
           @click="ajouter"
-          class="bg-black text-white rounded-md font-semibold w-fit mx-auto text-2xl mt-2 px-4 py-2"
+          class="bg-black text-white rounded-md font-semibold w-fit mx-auto text-xl mt-2 px-4 py-2"
         >
           Ajouter
         </button>
@@ -86,7 +86,7 @@
     >
       {{ allImage.length }}
     </div>
-    <div class="w-full overflow-auto h-full pb-32">
+    <div class="w-full overflow-auto h-full pb-20">
       <div class="h-32"></div>
 
       <div class="w-full grid grid-cols-2 gap-4">
@@ -97,13 +97,14 @@
         </template>
       </div>
       <div
-        class="cursor-pointer h-28 w-[50vw] flex justify-center items-center bg-[#00DC8D] text-4xl fixed bottom-0 uppercase transition-all duration-1000 ease-in-out"
+        class="cursor-pointer h-20 w-[50vw] flex justify-center items-center bg-[#00DC8D] text-3xl fixed bottom-0 uppercase transition-all duration-1000 ease-in-out"
         :class="showInfo ? 'right-0' : '-right-[40vw]'"
       >
         TERMINER
       </div>
     </div>
   </div>
+  <div class="md:hidden" />
 </template>
 
 <script setup>
