@@ -97,7 +97,7 @@
         </template>
       </div>
       <div
-        class="cursor-pointer h-28 w-[50vw] flex justify-center items-center bg-[#00DC8D] text-4xl fixed right-0 bottom-0 uppercase transition-all duration-1000 ease-in-out"
+        class="cursor-pointer h-28 w-[50vw] flex justify-center items-center bg-[#00DC8D] text-4xl fixed bottom-0 uppercase transition-all duration-1000 ease-in-out"
         :class="showInfo ? 'right-0' : '-right-[40vw]'"
       >
         TERMINER
