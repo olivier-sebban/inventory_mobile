@@ -3,6 +3,11 @@
   <div class="md:hidden">
     <NuxtPage />
   </div>
+  <img
+    src="@/assets/img/gettyimages.jpg"
+    class="w-screen h-screen object-cover max-md:hidden"
+    alt=""
+  />
 </template>
 <script setup>
 // onMounted(() => {
