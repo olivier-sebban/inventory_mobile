@@ -4,7 +4,7 @@
       <ListboxButton
         class="relative w-full cursor-default bg-white py-1.5 pl-3 pr-10 text-left text-[#A8A8A8] shadow-sm ring-0 outline-none sm:text-sm sm:leading-6"
       >
-        <span class="block truncate">{{ selected.name }}</span>
+        <span class="block truncate">{{ selected.attributes.name }}</span>
         <span
           class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
         >
@@ -22,7 +22,7 @@
         >
           <ListboxOption
             as="template"
-            v-for="person in people"
+            v-for="person in data"
             :key="person.id"
             :value="person"
             v-slot="{ active, selected }"
@@ -35,7 +35,7 @@
             >
               <span
                 :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']"
-                >{{ person.name }}</span
+                >{{ person.attributes.name }}</span
               >
 
               <span
@@ -66,18 +66,19 @@ import {
 } from "@headlessui/vue";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/vue/20/solid";
 
-const people = [
-  { id: 1, name: "Wade Cooper" },
-  { id: 2, name: "Arlene Mccoy" },
-  { id: 3, name: "Devon Webb" },
-  { id: 4, name: "Tom Cook" },
-  { id: 5, name: "Tanya Fox" },
-  { id: 6, name: "Hellen Schmidt" },
-  { id: 7, name: "Caroline Schultz" },
-  { id: 8, name: "Mason Heaney" },
-  { id: 9, name: "Claudie Smitham" },
-  { id: 10, name: "Emil Schaefer" },
-];
+const props = defineProps({
+  data: {
+    type: Array,
+    required: true,
+  },
+});
 
-const selected = ref(people[3]);
+const selected = ref(props.data[0]);
+const emit = defineEmits(["update:modelValue"]);
+emit("update:modelValue", selected.value);
+watch(
+  () => selected.value,
+  (val) => emit("update:modelValue", val)
+);
+console.log(selected.value);
 </script>

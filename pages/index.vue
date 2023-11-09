@@ -13,7 +13,7 @@
       </div>
       <div
         v-if="roomInfo"
-        class="absolute flex flex-col gap-4 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/50 shadow-sm z-50 border rounded-2xl p-16"
+        class="absolute flex flex-col gap-4 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/50 shadow-sm z-50 border rounded-2xl p-4 w-full max-w-xs"
       >
         <div
           @click="
@@ -27,19 +27,18 @@
           <font-awesome-icon icon="times-circle" class="text-3xl" />
         </div>
         <img :src="img" class="!w-full aspect-square object-cover" alt="" />
-        <Select />
-        <input
-          type="text"
-          placeholder="Pièce"
-          class="bg-white px-4 py-1.5 border-[#A8A8A8] placeholder:text-[#A8A8A8] text-[#A8A8A8] ring-0 outline-none"
-          name=""
-          v-model="input2"
-          id=""
+        <Select
+          :data="room"
+          @update:modelValue="
+            (val) => {
+              roomSelect = val;
+            }
+          "
         />
         <div class="flex gap-4">
           <input
             type="text"
-            placeholder="Pièce"
+            placeholder="Intitulé de l’objet"
             class="bg-white px-4 py-1.5 border-[#A8A8A8] placeholder:text-[#A8A8A8] text-[#A8A8A8] ring-0 outline-none w-full"
             name=""
             v-model="input3"
@@ -47,7 +46,8 @@
           />
           <input
             type="number"
-            placeholder="Pièce"
+            placeholder="0"
+            min="0"
             class="bg-white px-4 py-1.5 border-[#A8A8A8] placeholder:text-[#A8A8A8] text-[#A8A8A8] ring-0 outline-none w-20"
             name=""
             v-model="input4"
@@ -163,38 +163,28 @@
       Nous avons besoin de quelques informations pour vous envoyer votre inventaire
     </p>
     <div class="flex flex-col gap-0 mb-32">
-      <div class="px-6 py-5 border border-white w-full">
-        <input
-          type="text"
-          class="text-white bg-inherit outline-none ring-0 placeholder:text-gray-300"
-          placeholder="EMAIL"
-        />
-      </div>
-      <div class="px-6 py-5 border border-white border-t-0 w-full">
-        <input
-          type="text"
-          class="text-white bg-inherit outline-none ring-0 placeholder:text-gray-300"
-          placeholder="NOM"
-        />
-      </div>
-      <div class="px-6 py-5 border border-white w-full border-t-0">
-        <input
-          type="text"
-          class="text-white bg-inherit outline-none ring-0 placeholder:text-gray-300"
-          placeholder="TEL"
-        />
-      </div>
-      <div class="mt-2">
-        <label class="flex gap-2 items-center">
+      <template v-for="i in input_structure">
+        <div v-if="i.type == 'text'" class="px-6 py-5 border border-white w-full">
           <input
-            type="checkbox"
-            name=""
-            id=""
-            class="outline-none ring-0 w-5 bg-black border-white aspect-square"
+            type="text"
+            v-model="info[i.name]"
+            class="text-white bg-inherit outline-none ring-0 placeholder:text-gray-300"
+            :placeholder="i.placeholder"
           />
-          <p class="text-lg text-white">etes vous interessé par des produits</p>
-        </label>
-      </div>
+        </div>
+        <div v-if="i.type == 'checkbox'" class="mt-2">
+          <label class="flex gap-2 items-center">
+            <input
+              type="checkbox"
+              v-model="info[i.name]"
+              name=""
+              id=""
+              class="outline-none ring-0 w-5 bg-black border-white aspect-square"
+            />
+            <p class="text-lg text-white">{{ i.placeholder }}</p>
+          </label>
+        </div>
+      </template>
     </div>
     <div class="absolute bottom-0 w-full right-0">
       <div
@@ -209,6 +199,66 @@
 
 <script setup>
 import Camera from "simple-vue-camera";
+const config = useRuntimeConfig();
+const info = ref({});
+const api_structure = config.public.apiStructure;
+const api_room = config.public.apiRoom;
+
+const structure = ref(null);
+const rooms = ref(null);
+const input_structure = ref(null);
+$fetch(api_structure, {
+  onResponse: async ({ response: res }) => {
+    const data = await res;
+    structure.value = data._data?.data[0]?.attributes;
+    input_structure.value =
+      structure.value?.toolbox[0]?.inventaire[0]?.options[0]?.formContact[0]?.inputs;
+    const clarity = structure.value?.toolbox[0].clarity;
+    const google_tag = structure.value?.google_tag;
+    const Gtag =
+      google_tag != 0 && google_tag != "0"
+        ? `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${google_tag}')`
+        : "";
+
+    const clr =
+      clarity != 0 && clarity != "0"
+        ? `(function(c,l,a,r,i,t,y){
+	c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+	t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+	y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+	})(window, document, "clarity", "script", '${clarity}');`
+        : "";
+
+    useHead({
+      script: [
+        {
+          innerHTML: Gtag,
+          type: "text/plain",
+          "data-cookiecategory": "analytics",
+        },
+        {
+          innerHTML: clr,
+          type: "text/plain",
+          "data-cookiecategory": "targeting",
+        },
+      ],
+    });
+  },
+});
+
+const room = ref(null);
+
+$fetch(api_room, {
+  onResponse: async ({ response: res }) => {
+    const data = await res;
+    room.value = data._data?.data;
+  },
+});
+
 const camera = ref();
 const roomInfo = ref(false);
 const showInfo = ref(false);
@@ -219,15 +269,14 @@ const snapshot = async () => {
   img.value = window.URL.createObjectURL(blob);
   roomInfo.value = true;
 };
-const input2 = ref("");
 const input3 = ref("");
 const input4 = ref("");
+const roomSelect = ref(null);
 const ajouter = () => {
-  if (input2.value != "" && input3.value != "" && input4.value != "") {
+  if (roomSelect.value != null && input3.value != "" && input4.value != "") {
     allImage.value.push({
       img: img,
-      room: "room.value",
-      input2: input2.value,
+      room: roomSelect.value,
       input3: input3.value,
       input4: input4.value,
     });

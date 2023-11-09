@@ -4,6 +4,10 @@ export default defineNuxtConfig({
 	devtools: { enabled: true },
 	runtimeConfig: {
 		public: {
+			apiStructure: process.env.apiStructure || "",
+			apiRoom: process.env.apiRoom || "",
+			api_cookie: process.env.API_COOKIE || "",
+			apiSave: process.env.apiSave || "",
 		},
 	},
 	app: {
