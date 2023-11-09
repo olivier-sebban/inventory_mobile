@@ -15,9 +15,12 @@ module.exports = {
       colors : {
         primary : "var(--primary)",
         secondary : "var(--secondary)",
+        tertiary : "var(--tertiary)",
       },
       screens:{
         "3xl": "1645px",
+        'small': { 'raw': '(min-height: 649px)' },
+        'small-max': { 'raw': '(max-height: 650px)' },
       }
     }
   },

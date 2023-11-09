@@ -72,8 +72,18 @@ const props = defineProps({
     required: true,
   },
 });
+const dataRoom = ref(props.data);
+const autre = {
+  attributes: {
+    id: "autre",
+    name: "Autre",
+  },
+};
 
-const selected = ref(props.data[0]);
+if (autre.attributes.id !== dataRoom.value[0].attributes.id) {
+  dataRoom.value.unshift(autre);
+}
+const selected = ref(dataRoom.value[0]);
 const emit = defineEmits(["update:modelValue"]);
 emit("update:modelValue", selected.value);
 watch(
