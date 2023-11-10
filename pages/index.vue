@@ -19,12 +19,7 @@
           class="relative flex flex-row small:flex-col gap-4 bg-white/50 shadow-sm z-[50] border rounded-2xl p-4 small:w-full w-fit max-w-full small:max-w-xs"
         >
           <div
-            @click="
-              roomInfo = false;
-              input2 = '';
-              input3 = '';
-              input4 = '';
-            "
+            @click="roomInfo = false"
             class="bg-white text-black absolute top-0 right-0 rounded-full flex small:flex-row flex-col justify-center items-center z-50"
           >
             <font-awesome-icon icon="times-circle" class="text-3xl" />
@@ -33,6 +28,7 @@
           <div class="flex flex-col gap-4 flex-1">
             <Select
               :data="room"
+              :selected="roomSelect"
               @update:modelValue="
                 (val) => {
                   roomSelect = val;
@@ -85,15 +81,17 @@
     <font-awesome-icon icon="camera" class="text-4xl" />
   </button>
   <div
-    @click="
-      showInfo = !showInfo;
-      shareInfo = false;
-      userInfo = false;
+    @click.stop.prevent.passive="
+      () => {
+        showInfo = !showInfo;
+        shareInfo = false;
+        userInfo = false;
+      }
     "
     :class="showInfo ? 'right-0 w-screen' : '-right-[40vw] w-[50vw]'"
     class="h-screen fixed top-0 transition-all duration-1000 ease-in-out z-40"
   >
-    <div class="w-[50vw] ml-auto h-full bg-white px-4 relative">
+    <div class="w-[50vw] ml-auto h-full bg-white pl-4 relative">
       <div>
         <font-awesome-icon icon="times-circle" class="absolute top-0 right-0 text-2xl" />
       </div>
@@ -108,9 +106,24 @@
         <div class="w-full flex flex-col gap-6">
           <template v-for="(info, key) in allImage">
             <div>
-              <h2 class="font-bold text-base uppercase">{{ key }}</h2>
-              <div class="grid grid-cols-2 gap-4">
-                <div class="w-full !aspect-square" v-for="i in info">
+              <h2 class="font-bold text-base uppercase mb-2">{{ key }}</h2>
+              <div class="grid grid-cols-2 gap-0">
+                <div class="w-full relative !aspect-square pr-4" v-for="i in info">
+                  <font-awesome-icon
+                    @click.self.stop="
+                      () => {
+                        allImage[key].splice(allImage[key].indexOf(i), 1);
+                        if (allImage[key].length == 0) {
+                          delete allImage[key];
+                        }
+                        showInfo = true;
+                        shareInfo = false;
+                        userInfo = false;
+                      }
+                    "
+                    icon="times-circle"
+                    class="absolute z-50 -top-2 right-2 p-1 text-red-500 text-sm"
+                  />
                   <img :src="i.img" class="object-cover w-full !aspect-square" />
                   <p>{{ i.intitule }}</p>
                 </div>
@@ -135,7 +148,7 @@
     :class="shareInfo && showInfo ? 'translate-y-0' : 'translate-y-full'"
     class="w-screen fixed transition-all duration-1000 bg-primary text-white bottom-0 grid grid-cols-4 left-0 gap-9 z-50 sm:p-16 px-5 py-12"
   >
-    <div @click="share" v-for="i in dataShare" class="flex flex-col gap-2">
+    <div @click="share(i)" v-for="i in dataShare" class="flex flex-col gap-2">
       <div
         v-if="i.iconUrl"
         :style="
@@ -196,7 +209,8 @@
       </div>
       <div class="absolute bottom-0 w-full right-0">
         <div
-          class="text-black text-2xl font-semibold ml-auto w-fit min-w-[50vw] bg-[#00DC8D] py-6 px-14 flex justify-center items-center"
+          @click="envoyer"
+          class="cursor-pointer text-black text-2xl font-semibold ml-auto w-fit min-w-[50vw] bg-[#00DC8D] py-6 px-14 flex justify-center items-center"
         >
           VALIDER
         </div>
@@ -204,14 +218,61 @@
     </div>
   </div>
   <div class="md:hidden w-screen h-screen object-cover max-md:hidden" />
+  <div
+    v-if="shareResult != null"
+    class="fixed top-0 z-[999999] left-0 w-screen h-screen max-h-screen bg-black/50 flex justify-center items-center"
+  >
+    <div class="bg-white max-w-sm mx-auto rounded-lg p-4 small:py-16 relative">
+      <div
+        @click="
+          roomInfo = false;
+          shareResult = null;
+          showInfo = !showInfo;
+          shareInfo = false;
+          userInfo = false;
+        "
+        class="bg-white text-black absolute top-0 right-0 rounded-full flex small:flex-row flex-col justify-center items-center z-50"
+      >
+        <font-awesome-icon icon="times-circle" class="text-3xl" />
+      </div>
+      <p class="w-3/4 mx-auto mb-8 text-center">
+        {{ shareResult?.title }}
+      </p>
+      <a :href="shareResult?.link" class="w-1/2 mx-auto flex justify-center items-center">
+        <img :src="shareResult?.img" class="w-full" alt="" />
+      </a>
+    </div>
+  </div>
 </template>
 
 <script setup>
+import { customAlphabet } from "nanoid";
+import nuxtStorage from "nuxt-storage";
 import Camera from "simple-vue-camera";
+const route = useRoute();
+
+const url = useRequestURL();
+let hostname = url.hostname;
+const domainParts = hostname.split(".");
+hostname = domainParts.slice(-2).join(".");
+
+if (nuxtStorage.localStorage?.getData("uuid") == null) {
+  const nanoid = customAlphabet("1234567890abcdef", 10);
+  nuxtStorage.localStorage?.setData("uuid", nanoid(10), 60, "d");
+}
+let uuid = 0;
+if (route.query?.id) {
+  uuid = route.query?.id;
+  nuxtStorage.localStorage?.setData("uuid", uuid, 60, "d");
+} else {
+  uuid = nuxtStorage.localStorage?.getData("uuid");
+}
+
 const config = useRuntimeConfig();
 const info = ref({});
 const api_structure = config.public.apiStructure;
 const api_room = config.public.apiRoom;
+const apiSaveInventory = config.public.apiSaveInventory;
 
 const structure = ref(null);
 const rooms = ref(null);
@@ -232,8 +293,9 @@ const isColorLight = (hexColor) => {
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
   return brightness > 200;
 };
+const apiStructure = api_structure.replace("localhost", hostname);
 
-$fetch(api_structure, {
+$fetch(apiStructure, {
   onResponse: async ({ response: res }) => {
     const data = await res;
     structure.value = data._data?.data[0]?.attributes;
@@ -251,7 +313,6 @@ $fetch(api_structure, {
     document.documentElement.style.setProperty("--secondary", color_secondary.value);
     document.documentElement.style.setProperty("--tertiary", color_tertiary.value);
 
-    console.log(structure.value);
     input_structure.value =
       structure.value?.toolbox[0]?.inventaire[0]?.options[0]?.formContact[0]?.inputs;
     const clarity = structure.value?.toolbox[0].clarity;
@@ -305,9 +366,11 @@ const roomInfo = ref(false);
 const showInfo = ref(false);
 const allImage = ref({});
 const img = ref("");
+const imgBlob = ref(null);
 const snapshot = async () => {
   const blob = await camera.value?.snapshot();
   img.value = window.URL.createObjectURL(blob);
+  imgBlob.value = blob;
   roomInfo.value = true;
 };
 const input2 = ref("");
@@ -321,21 +384,20 @@ const ajouter = () => {
     input2.value != "" &&
     input4.value != ""
   ) {
-    console.log(roomSelect.value);
     if (!allImage.value[roomSelect.value.attributes.name + " : " + input2.value]) {
       allImage.value[roomSelect.value.attributes.name + " : " + input2.value] = [];
     }
 
     allImage.value[roomSelect.value.attributes.name + " : " + input2.value].push({
-      img: img,
+      img_blob: imgBlob.value,
+      img: img.value,
       room: roomSelect.value,
       nom: input2.value,
       intitule: input3.value,
       nb: input4.value,
     });
-    input2.value = "";
-    input3.value = "";
-    input4.value = "";
+
+    imgBlob.value = null;
     roomInfo.value = false;
   }
 };
@@ -347,9 +409,61 @@ const terminer = () => {
   }
 };
 
-const share = () => {
+const error = ref(false);
+const action = ref(0);
+const shareResult = ref(null);
+const share = (e) => {
   if (showInfo.value && shareInfo.value) {
     userInfo.value = true;
+    action.value = e.action;
+  }
+};
+const envoyer = () => {
+  const listR = [];
+  const listI = [];
+  for (const i in allImage.value) {
+    listR.push({ ...allImage.value[i][0].room, room: allImage.value[i][0].nom });
+  }
+  for (const i in allImage.value) {
+    for (const item in allImage.value[i]) {
+      console.log(item);
+      listI.push({
+        img_blob: allImage.value[i][item].img_blob,
+        room: allImage.value[i][item].room,
+        room_name: allImage.value[i][item].nom,
+        intitule: allImage.value[i][item].intitule,
+        nb: allImage.value[i][item].nb,
+      });
+    }
+  }
+  error.value = false;
+  input_structure.value.forEach((element) => {
+    if (element.required) {
+      if (info.value[element.name] == undefined || info.value[element.name] == "") {
+        error.value = true;
+      }
+    }
+  });
+
+  if (!error.value) {
+    const data = {
+      uid: uuid,
+      domain: hostname,
+      rooms: listR,
+      items: listI,
+      customer: info.value,
+      action: action.value,
+      url: url.origin,
+    };
+    const { data: dataRes } = useFetch(apiSaveInventory, {
+      method: "POST",
+      body: JSON.stringify(data),
+      onResponse: (data) => {
+        shareResult.value = data.response._data;
+        console.log(data.response._data);
+      },
+    });
+  } else {
   }
 };
 </script>

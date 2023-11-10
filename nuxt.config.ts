@@ -8,6 +8,7 @@ export default defineNuxtConfig({
 			apiRoom: process.env.apiRoom || "",
 			api_cookie: process.env.API_COOKIE || "",
 			apiSave: process.env.apiSave || "",
+			apiSaveInventory: process.env.apiSaveInventory || "",
 		},
 	},
 	app: {
